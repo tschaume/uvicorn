@@ -144,7 +144,9 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
     """
 
     def __init__(
-        self, scope: HTTPScope, timing: "uvicorn.protocols.utils.RequestResponseTiming"
+        self,
+        scope: "HTTPScope",
+        timing: "uvicorn.protocols.utils.RequestResponseTiming",
     ):
         self.scope = scope
         self.timing = timing
