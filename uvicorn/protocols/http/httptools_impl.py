@@ -108,7 +108,7 @@ class HttpToolsProtocol(asyncio.Protocol):
         self.headers: List[Tuple[bytes, bytes]] = None  # type: ignore[assignment]
         self.expect_100_continue = False
         self.cycle: RequestResponseCycle = None  # type: ignore[assignment]
-        self.request_start_time: float = None
+        self.request_start_time: Optional[float] = None
 
     # Protocol interface
     def connection_made(  # type: ignore[override]

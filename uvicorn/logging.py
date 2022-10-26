@@ -147,7 +147,7 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
     ):
         self.scope = scope
         self.timing = timing
-        self.status_code = None
+        self.status_code: Optional[str] = None
         self.response_headers: Dict[str, str] = {}
         self._response_length = 0
 
@@ -310,9 +310,9 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
         # FIXME: add WSGI environ
         yield from self.HANDLERS
         for k, _ in self.scope["headers"]:
-            yield "{%s}i" % k.lower()
+            yield f"{k.lower()}i"
         for k in self.response_headers:
-            yield "{%s}o" % k.lower()
+            yield f"{k.lower()}o"
 
     def __len__(self) -> int:
         # FIXME: add WSGI environ

@@ -378,7 +378,7 @@ class RequestResponseCycle:
         logger: logging.Logger,
         access_logger: logging.Logger,
         access_log: bool,
-        access_log_format: str,
+        access_log_format: Optional[str],
         default_headers: List[Tuple[bytes, bytes]],
         message_event: asyncio.Event,
         on_response: Callable[..., None],
