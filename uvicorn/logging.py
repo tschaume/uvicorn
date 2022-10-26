@@ -321,8 +321,4 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
     def __len__(self) -> int:
         # FIXME: add WSGI environ
         headers: tuple = cast(tuple, self.scope.get("headers", ()))
-        return (
-            len(self.HANDLERS)
-            + len(headers)
-            + len(self.response_headers)
-        )
+        return len(self.HANDLERS) + len(headers) + len(self.response_headers)
