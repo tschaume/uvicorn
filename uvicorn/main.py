@@ -486,7 +486,7 @@ def run(
     ] = LOGGING_CONFIG,
     log_level: typing.Optional[typing.Union[str, int]] = None,
     access_log: bool = True,
-    access_log_format: str = None,
+    access_log_format: typing.Optional[str] = None,
     proxy_headers: bool = True,
     server_header: bool = True,
     date_header: bool = True,
