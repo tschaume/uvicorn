@@ -6,7 +6,7 @@ import typing
 from collections import abc
 from copy import copy
 from os import getpid
-from typing import Callable, Dict, Iterator, Optional, Union, cast
+from typing import Callable, Dict, Iterator, Optional, cast
 
 import click
 
