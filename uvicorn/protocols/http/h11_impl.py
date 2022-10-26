@@ -1,14 +1,15 @@
 import asyncio
 import http
 import logging
+import traceback
 import sys
+import h11
+
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union, cast
 from urllib.parse import unquote
 
-import h11
-
 from uvicorn.config import Config
-from uvicorn.logging import TRACE_LOG_LEVEL
+from uvicorn.logging import TRACE_LOG_LEVEL, AccessLogFields
 from uvicorn.protocols.http.flow_control import (
     CLOSE_HEADER,
     HIGH_WATER_LIMIT,
@@ -16,6 +17,7 @@ from uvicorn.protocols.http.flow_control import (
     service_unavailable,
 )
 from uvicorn.protocols.utils import (
+    RequestResponseTiming,
     get_client_addr,
     get_local_addr,
     get_path_with_query_string,
@@ -249,10 +251,12 @@ class H11Protocol(asyncio.Protocol):
                     logger=self.logger,
                     access_logger=self.access_logger,
                     access_log=self.access_log,
+                    access_log_format=self.config.access_log_format,
                     default_headers=self.server_state.default_headers,
                     message_event=asyncio.Event(),
                     on_response=self.on_response_complete,
                 )
+                self.cycle.timing.request_started()
                 task = self.loop.create_task(self.cycle.run_asgi(app))
                 task.add_done_callback(self.tasks.discard)
                 self.tasks.add(task)
@@ -270,6 +274,7 @@ class H11Protocol(asyncio.Protocol):
                     self.transport.resume_reading()
                     self.conn.start_next_cycle()
                     continue
+                self.cycle.timing.request_ended()
                 self.cycle.more_body = False
                 self.cycle.message_event.set()
 
@@ -373,6 +378,7 @@ class RequestResponseCycle:
         logger: logging.Logger,
         access_logger: logging.Logger,
         access_log: bool,
+        access_log_format: str,
         default_headers: List[Tuple[bytes, bytes]],
         message_event: asyncio.Event,
         on_response: Callable[..., None],
@@ -384,6 +390,7 @@ class RequestResponseCycle:
         self.logger = logger
         self.access_logger = access_logger
         self.access_log = access_log
+        self.access_log_format = access_log_format
         self.default_headers = default_headers
         self.message_event = message_event
         self.on_response = on_response
@@ -400,6 +407,10 @@ class RequestResponseCycle:
         # Response state
         self.response_started = False
         self.response_complete = False
+        self.timing = RequestResponseTiming()
+
+        # For logging
+        self.access_log_fields = AccessLogFields(self.scope, self.timing)
 
     # ASGI exception wrapper
     async def run_asgi(self, app: "ASGI3Application") -> None:
@@ -457,6 +468,9 @@ class RequestResponseCycle:
         if self.disconnected:
             return
 
+        if self.access_log_fields is not None:
+            self.access_log_fields.on_asgi_message(message)
+
         if not self.response_started:
             # Sending response status line and headers
             if message_type != "http.response.start":
@@ -466,6 +480,7 @@ class RequestResponseCycle:
 
             self.response_started = True
             self.waiting_for_100_continue = False
+            self.timing.response_started()
 
             status_code = message["status"]
             message_headers = cast(
@@ -475,16 +490,6 @@ class RequestResponseCycle:
 
             if CLOSE_HEADER in self.scope["headers"] and CLOSE_HEADER not in headers:
                 headers = headers + [CLOSE_HEADER]
-
-            if self.access_log:
-                self.access_logger.info(
-                    '%s - "%s %s HTTP/%s" %d',
-                    get_client_addr(self.scope),
-                    self.scope["method"],
-                    get_path_with_query_string(self.scope),
-                    self.scope["http_version"],
-                    status_code,
-                )
 
             # Write response status line and headers
             reason = STATUS_PHRASES[status_code]
@@ -519,6 +524,27 @@ class RequestResponseCycle:
                 event = h11.EndOfMessage()
                 output = self.conn.send(event)
                 self.transport.write(output)
+
+                self.timing.response_ended()
+
+                if self.access_log:
+                    if self.access_log_format is None:
+                        self.access_logger.info(
+                            '%s - "%s %s HTTP/%s" %d',
+                            get_client_addr(self.scope),
+                            self.scope["method"],
+                            get_path_with_query_string(self.scope),
+                            self.scope["http_version"],
+                            self.access_log_fields.status_code,
+                        )
+                    else:
+                        try:
+                            self.access_logger.info(
+                                self.access_log_format,
+                                self.access_log_fields,
+                            )
+                        except:  # noqa
+                            self.logger.error(traceback.format_exc())
 
         else:
             # Response already sent

@@ -25,8 +25,11 @@ trustme==0.9.0
 cryptography==38.0.1
 coverage==6.5.0
 coverage-conditional-plugin==0.7.0
-httpx==0.23.0
 watchgod==0.8.2
+httpx==1.0.0b0
+pytest-asyncio==0.15.1
+async_generator==1.10 ; python_version < '3.7'
+gunicorn==20.1.0
 
 # Documentation
 mkdocs==1.4.0
