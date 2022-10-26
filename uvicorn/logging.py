@@ -16,8 +16,9 @@ else:  # pragma: py-lt-38
     from typing import Literal
 
 if typing.TYPE_CHECKING:
+    from asgiref.typing import ASGISendEvent, HTTPScope
+
     import uvicorn.protocols.utils
-    from asgiref.typing import HTTPScope, ASGISendEvent
 
 TRACE_LOG_LEVEL = 5
 

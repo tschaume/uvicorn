@@ -1,12 +1,12 @@
 import asyncio
 import http
 import logging
-import traceback
 import sys
-import h11
-
+import traceback
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union, cast
 from urllib.parse import unquote
+
+import h11
 
 from uvicorn.config import Config
 from uvicorn.logging import TRACE_LOG_LEVEL, AccessLogFields
