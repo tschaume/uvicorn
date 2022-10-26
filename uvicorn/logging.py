@@ -17,6 +17,7 @@ else:  # pragma: py-lt-38
 
 if typing.TYPE_CHECKING:
     import uvicorn.protocols.utils
+    from asgiref.typing import HTTPScope
 
 TRACE_LOG_LEVEL = 5
 
@@ -142,7 +143,7 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
     """
 
     def __init__(
-        self, scope: dict, timing: "uvicorn.protocols.utils.RequestResponseTiming"
+        self, scope: HTTPScope, timing: "uvicorn.protocols.utils.RequestResponseTiming"
     ):
         self.scope = scope
         self.timing = timing
@@ -164,7 +165,7 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
     def duration(self) -> float:
         return self.timing.total_duration_seconds()
 
-    def on_asgi_message(self, message: Dict[str, Any]) -> None:
+    def on_asgi_message(self, message: "ASGISendEvent") -> None:
         if message["type"] == "http.response.start":
             self.status_code = message["status"]
             self.response_headers = {
