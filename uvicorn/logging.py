@@ -6,7 +6,7 @@ import typing
 from collections import abc
 from copy import copy
 from os import getpid
-from typing import Any, Callable, Dict, Iterator, Optional
+from typing import Callable, Dict, Iterator, Optional
 
 import click
 
@@ -17,7 +17,7 @@ else:  # pragma: py-lt-38
 
 if typing.TYPE_CHECKING:
     import uvicorn.protocols.utils
-    from asgiref.typing import HTTPScope
+    from asgiref.typing import HTTPScope, ASGISendEvent
 
 TRACE_LOG_LEVEL = 5
 
