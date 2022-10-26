@@ -103,8 +103,10 @@ class Server:
             # We use this when the server is run from a Gunicorn worker.
 
             def _share_socket(sock: socket.SocketType) -> socket.SocketType:
-                # Windows requires the socket be explicitly shared across
-                # multiple workers (processes).
+                """
+                Windows requires the socket be explicitly shared across
+                multiple workers (processes).
+                """
                 from socket import fromshare  # type: ignore
 
                 sock_data = sock.share(os.getpid())  # type: ignore
