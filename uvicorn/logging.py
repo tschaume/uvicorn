@@ -6,7 +6,7 @@ import typing
 from collections import abc
 from copy import copy
 from os import getpid
-from typing import Callable, Dict, Iterator, Optional
+from typing import Callable, Dict, Iterator, Optional, Union, cast
 
 import click
 
@@ -108,7 +108,7 @@ class AccessFormatter(ColourizedFormatter):
         return status_and_phrase
 
     def formatMessage(self, record: logging.LogRecord) -> str:
-        if len(record.args) != 5:
+        if len(getattr(record, "args")) != 5:
             return super().formatMessage(record)
         recordcopy = copy(record)
         (
@@ -147,7 +147,7 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
     ):
         self.scope = scope
         self.timing = timing
-        self.status_code: Optional[str] = None
+        self.status_code: Optional[int] = None
         self.response_headers: Dict[str, str] = {}
         self._response_length = 0
 
@@ -170,7 +170,7 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
             self.status_code = message["status"]
             self.response_headers = {
                 k.decode("ascii"): v.decode("ascii")
-                for k, v in message.get("headers") or {}
+                for k, v in message.get("headers", {})
             }
         elif message["type"] == "http.response.body":
             self._response_length += len(message.get("body", ""))
@@ -231,7 +231,8 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
 
     @_register_handler("h")
     def _remote_address(self) -> Optional[str]:
-        return self.scope["client"][0]
+        client: tuple = cast(tuple, self.scope.get("client", ()))
+        return client[0]
 
     @_register_handler("l")
     def _dash(self) -> str:
@@ -272,7 +273,7 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
 
     @_register_handler("s")
     def status(self) -> Optional[str]:
-        return self.status_code or "-"
+        return str(self.status_code) or "-"
 
     @_register_handler("B")
     def response_length(self) -> Optional[str]:
@@ -310,14 +311,18 @@ class AccessLogFields(abc.Mapping):  # pragma: no cover
         # FIXME: add WSGI environ
         yield from self.HANDLERS
         for k, _ in self.scope["headers"]:
-            yield f"{k.lower()}i"
-        for k in self.response_headers:
-            yield f"{k.lower()}o"
+            ks = k.decode("utf-8").lower()
+            yield f"{ks}i"
+        header_keys: list = list(self.response_headers.keys())
+        for k in header_keys:
+            ks = k.decode("utf-8").lower()
+            yield f"{ks}o"
 
     def __len__(self) -> int:
         # FIXME: add WSGI environ
+        headers: tuple = cast(tuple, self.scope.get("headers", ()))
         return (
             len(self.HANDLERS)
-            + len(self.scope["headers"] or ())
+            + len(headers)
             + len(self.response_headers)
         )

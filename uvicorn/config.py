@@ -269,6 +269,7 @@ class Config:
         self.log_config = log_config
         self.log_level = log_level
         self.access_log = access_log
+        self.access_log_format = access_log_format
         self.use_colors = use_colors
         self.interface = interface
         self.reload = reload
@@ -295,8 +296,6 @@ class Config:
         self.encoded_headers: List[Tuple[bytes, bytes]] = []
         self.factory = factory
         self.h11_max_incomplete_event_size = h11_max_incomplete_event_size
-
-        self.access_log_format = access_log_format
 
         self.loaded = False
         self.configure_logging()
