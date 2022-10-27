@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.19.1 - 2022-10-26
+
+- access log format from @immerrr
+
 ## 0.19.0 - 2022-10-19
 
 ### Added
