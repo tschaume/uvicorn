@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "uvicorn"
+name = "uvicorn-tschaume"
 dynamic = ["version"]
 description = "The lightning-fast ASGI server."
 readme = "README.md"
@@ -11,6 +11,7 @@ license = "BSD-3-Clause"
 requires-python = ">=3.7"
 authors = [
     { name = "Tom Christie", email = "tom@tomchristie.com" },
+    { name = "Patrick Huck", email = "phuck@lbl.gov" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

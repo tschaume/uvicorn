@@ -21,7 +21,7 @@ sys.exit(1)
 # To be removed once GitHub catches up.
 
 setup(
-    name="uvicorn",
+    name="uvicorn-tschaume",
     install_requires=[
         "click>=7.0",
         "h11>=0.8",
